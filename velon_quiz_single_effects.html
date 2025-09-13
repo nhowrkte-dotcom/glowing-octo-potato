@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>اختبار الإدارة | Velon RP</title>
+<style>
+  :root{
+    --panel:rgba(15,5,25,.72);
+    --panel2:rgba(15,5,25,.80);
+    --stroke:rgba(184,77,255,.45);
+    --text:#fff;
+    --accent:#b84dff;
+    --ok:#4cd964;--bad:#ff3b30;
+  }
+  *{box-sizing:border-box}
+  html,body{
+    height:100%;margin:0;color:var(--text);font-family:'Noto Sans Arabic',Arial,sans-serif;
+    background:url('velon.png') center/cover fixed no-repeat;
+  }
+  body::before{content:"";position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:0;pointer-events:none}
+  .wrap{position:relative;min-height:100%;z-index:1;display:flex;flex-direction:column;gap:18px;padding:22px 14px}
+
+  /* shared */
+  .panel{width:min(960px,98%);margin:0 auto;background:var(--panel);border:1px solid var(--stroke);
+          border-radius:22px;padding:18px 16px 20px;backdrop-filter:blur(6px);
+          box-shadow:0 0 28px rgba(184,77,255,.35), inset 0 0 18px rgba(255,0,255,.12)}
+  .brand{text-align:center;margin-bottom:10px}
+  .brand .name{font-size:20px;font-weight:800;color:#ffd9ff;text-shadow:0 0 10px var(--accent)}
+  h1{margin:4px 0 0;font-size:22px;font-weight:900;color:#f4e9ff;text-shadow:0 0 12px var(--accent)}
+  .footer{text-align:center;color:#ff6b6b;font-weight:900;text-shadow:0 0 8px #fff,0 0 14px #ff6b6b}
+  .hidden{display:none}
+
+  /* quiz styles */
+  .sub{opacity:.95;font-size:12px;text-align:center;margin-top:6px}
+  .q{margin:12px 0;padding:12px;border-radius:14px;background:rgba(184,77,255,.10);border:1px solid rgba(184,77,255,.25)}
+  .q-title{font-weight:800;margin-bottom:6px;color:#ffe6ff}
+  .opt{display:flex;align-items:center;gap:10px;margin:8px 0;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+  .dot{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:transparent;cursor:pointer;flex:0 0 18px;position:relative}
+  .dot.active{border-color:#ff83ff;box-shadow:0 0 10px rgba(255,131,255,.6)}
+  .dot.active::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#ff83ff}
+  .tag{margin-right:auto;opacity:.95}
+  .actions{display:flex;justify-content:center;gap:12px;margin-top:8px}
+  .btn{padding:10px 16px;border-radius:12px;border:1px solid var(--stroke);color:#fff;cursor:pointer;font-weight:800;
+        background:linear-gradient(180deg,rgba(184,77,255,.25),rgba(184,77,255,.12))}
+
+  /* results styles */
+  .panel.results{background:var(--panel2)}
+  .sum{text-align:center;margin-bottom:10px}
+  .score{font-size:20px;font-weight:900}
+  .q-box{margin:10px 0;padding:10px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+  .q-head{font-weight:800;margin-bottom:6px}
+  .ans{display:flex;gap:8px;align-items:center;margin:6px 0;padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,.08)}
+  .badge{font-weight:900;padding:2px 8px;border-radius:999px;font-size:12px}
+  .badge.ok{background:rgba(76,217,100,.15);border:1px solid rgba(76,217,100,.45);color:var(--ok)}
+  .badge.bad{background:rgba(255,59,48,.15);border:1px solid rgba(255,59,48,.45);color:var(--bad)}
+  .muted{opacity:.8;font-size:13px}
+
+  .fx-layer{position:fixed;inset:0;z-index:5;pointer-events:none}
+  .click-logo{
+    position:absolute; width:18px; height:18px; border-radius:50%;
+    opacity:0; transform:translate(-50%,-50%) scale(.7);
+    animation:clickPop .8s ease-out forwards;
+  }
+  .click-logo img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+  @keyframes clickPop{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}
+    20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+    80%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(.85)}
+  }
+  .spark{
+    position:absolute; width:8px; height:8px; border-radius:50%;
+    opacity:0; transform:translate(-50%,-50%) scale(.6);
+    animation:sparkFly 1.8s ease-out forwards;
+  }
+  .spark img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+  @keyframes sparkFly{
+    0%{opacity:0; transform:translate(calc(var(--x) - 50%), calc(var(--yStart) - 50%)) scale(.6)}
+    20%{opacity:1}
+    100%{opacity:0; transform:translate(calc(var(--x) - 50%), calc(var(--yEnd) - 50%)) scale(.9)}
+  }
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- QUIZ VIEW -->
+    <main id="view-quiz" class="panel">
+      <div class="brand">
+        <div class="name">Velon RP</div>
+        <h1>اختبار الإدارة</h1>
+        <div class="sub">اختر نقاطك (•) ثم اضغط <b>إرسال</b> — النتيجة ستظهر هنا في نفس الصفحة</div>
+      </div>
+      <div id="qs"></div>
+      <div class="actions">
+        <button class="btn" id="submitBtn">إرسال</button>
+        <button class="btn" id="resetBtn">إعادة تعيين</button>
+      </div>
+    </main>
+
+    <!-- RESULTS VIEW -->
+    <main id="view-results" class="panel results hidden">
+      <div class="brand">
+        <div class="name">Velon RP</div>
+        <h1>نتيجة الاختبار</h1>
+      </div>
+      <div class="sum">
+        <div class="score">العلامة: <span id="score"></span></div>
+        <div class="muted">كل إجابة صحيحة = نقطة واحدة</div>
+      </div>
+      <div id="details"></div>
+      <div class="actions">
+        <button class="btn" id="backBtn">عودة للاختبار</button>
+        <button class="btn" id="clearBtn">تفريغ وحل من جديد</button>
+      </div>
+    </main>
+
+    <div class="footer">اشتركوا في القناة</div>
+  </div>
+
+<script>
+  // الأسئلة (من الأعلى للأسفل)
+  const questions=[
+    { q:"ما يعني VDM ؟", options:["الصدم العشوائي","تقمص الشخصية الواقعية بالأقوال والأفعال","القتل العشوائي"] },
+    { q:"ما يعني RDM ؟", options:["تقدير حياتك","القتل العشوائي","الصدم العشوائي"] },
+    { q:"هل يسمح لك وأنت سجل دخولك تلعب كم مواطن؟", options:["نعم","لا"] },
+    { q:"أكثر مدة سجن ؟", options:["5 دقيقة","15 دقيقة","10 دقيقة"] },
+    { q:"ما يعني LAR ؟", options:["تقدير حياتك و حياة الآخرين بشكل واقعي و داخل ضمن الرول بلاي","القتل العشوائي","تقمص الشخصية الواقعية بالأقوال والأفعال"] },
+    { q:"هل يحق سجن المواطنين بدون ذكر السبب كامل؟", options:["نعم","لا"] },
+    { q:"ما يعني الرول بلاي RolePlay ؟", options:["تقمص الشخصية الواقعية بالأقوال والأفعال","تقدير حياتك و حياة الآخرين بشكل واقعي و داخل ضمن الرول بلاي","الصدم العشوائي"] },
+    { q:"أقل مدة سجن ؟", options:["15 دقيقة","10 دقيقة","5 دقيقة"] },
+    { q:"هل يسمح إنعاش منطقة غير آمنة ؟", options:["نعم","لا"] },
+    { q:"هل يسمح تكون في فعالية وأنت كادري ؟", options:["نعم","لا"] },
+    { q:"هل يسمح تدخل في شؤون إداري آخر ؟", options:["نعم","لا"] },
+    { q:"هل يسمح سحب أدمن آخر أو مواطن بدون طلب إذن منه ؟", options:["نعم","لا"] },
+    { q:"هل يسمح إنعاش أي مواطن بالمنطقة الآمنة (بإستثناء ضغط السيرفر أو عدم وجود مسعفين) ؟", options:["نعم","لا"] },
+    { q:"هل يحق لك طلب الترقيات أو الاعتراض على ترقيات أشخاص آخرين ؟", options:["نعم","لا"] }
+  ];
+  // مفتاح الإجابات (الصحيحة) بالترتيب
+  const answerKey={0:0,1:1,2:1,3:2,4:0,5:1,6:0,7:2,8:1,9:1,10:1,11:1,12:1,13:1};
+
+  // بناء الأسئلة
+  const qsEl=document.getElementById('qs');
+  questions.forEach((item, qi)=>{
+    const card=document.createElement('div'); card.className='q';
+    const title=document.createElement('div'); title.className='q-title'; title.textContent=item.q; card.appendChild(title);
+    item.options.forEach((txt, oi)=>{
+      const row=document.createElement('div'); row.className='opt';
+      const dot=document.createElement('button'); dot.className='dot'; dot.type='button';
+      const label=document.createElement('div'); label.className='tag'; label.textContent=txt;
+      dot.addEventListener('click',()=>{
+        card.querySelectorAll('.dot').forEach(d=>d.classList.remove('active'));
+        dot.classList.add('active'); card.dataset.choice=oi;
+      });
+      row.appendChild(dot); row.appendChild(label); card.appendChild(row);
+    });
+    qsEl.appendChild(card);
+  });
+
+  function computeResults(){ // returns payload + answers array
+    const answers=[];
+    document.querySelectorAll('.q').forEach((q, qi)=>{
+      const chosen = q.dataset.choice!==undefined ? parseInt(q.dataset.choice) : NaN;
+      answers.push({ q: questions[qi].q, options: questions[qi].options, chosen, correct: answerKey[qi] });
+    });
+    const score = answers.reduce((s,a)=> s + (a.chosen===a.correct ? 1:0), 0);
+    return { server:"Velon RP", score, total: questions.length, answers };
+  }
+
+  function showResults(payload){
+    // حفظ محلي
+    try{ localStorage.setItem('velon_last_results', JSON.stringify(payload)); }catch(_e){}
+    // تعبئة الواجهة
+    document.getElementById('score').textContent = `${payload.score} / ${payload.total}`;
+    const host = document.getElementById('details'); host.innerHTML='';
+    payload.answers.forEach((a,i)=>{
+      const box=document.createElement('div'); box.className='q-box';
+      const tt=document.createElement('div'); tt.className='q-head'; tt.textContent = (i+1)+'. '+a.q; box.appendChild(tt);
+      const chosenTxt = isNaN(a.chosen) ? 'غير مُختارة' : a.options[a.chosen];
+      const correctTxt = a.options[a.correct];
+      const ok = a.chosen===a.correct;
+      const row=document.createElement('div'); row.className='ans';
+      const badge=document.createElement('div'); badge.className='badge ' + (ok?'ok':'bad'); badge.textContent = ok ? '✓' : '✗';
+      const txt=document.createElement('div');
+      txt.innerHTML = ok
+        ? `إجابتك صحيحة: <b>${correctTxt}</b>`
+        : `إجابتك: <b>${chosenTxt}</b> — الصحيحة: <b>${correctTxt}</b>`;
+      row.appendChild(badge); row.appendChild(txt); box.appendChild(row);
+      host.appendChild(box);
+    });
+    // إظهار النتائج
+    document.getElementById('view-quiz').classList.add('hidden');
+    document.getElementById('view-results').classList.remove('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // أزرار
+  document.getElementById('submitBtn').addEventListener('click',()=>{
+    const payload = computeResults();
+    showResults(payload);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    document.querySelectorAll('.q').forEach(q=>{ q.dataset.choice=""; q.querySelectorAll('.dot').forEach(d=>d.classList.remove('active')); });
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  document.getElementById('backBtn').addEventListener('click',()=>{
+    document.getElementById('view-results').classList.add('hidden');
+    document.getElementById('view-quiz').classList.remove('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  document.getElementById('clearBtn').addEventListener('click',()=>{
+    document.querySelectorAll('.q').forEach(q=>{ q.dataset.choice=""; q.querySelectorAll('.dot').forEach(d=>d.classList.remove('active')); });
+    document.getElementById('view-results').classList.add('hidden');
+    document.getElementById('view-quiz').classList.remove('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+</script>
+
+  <div class="fx-layer" id="fxLayer"></div>
+<script>
+  const fx = document.getElementById('fxLayer');
+
+  // Click 18px logo
+  document.addEventListener('click',(e)=>{
+    const d=document.createElement('div'); d.className='click-logo';
+    d.style.left = e.clientX + 'px'; d.style.top = e.clientY + 'px';
+    const im=document.createElement('img'); im.src='velon.png'; im.alt='logo';
+    d.appendChild(im); d.addEventListener('animationend',()=>d.remove());
+    fx.appendChild(d);
+  });
+
+  // Auto 8px sparks
+  function spawnSpark(){
+    const s=document.createElement('div'); s.className='spark';
+    const im=document.createElement('img'); im.src='velon.png'; im.alt='logo'; s.appendChild(im);
+    let x=Math.floor(Math.random()*100);
+    let yStart=110; let yEnd=60+Math.random()*20;
+    const r=Math.random();
+    if(r<0.2){x=-5;yStart=Math.floor(20+Math.random()*60);yEnd=yStart-20}
+    else if(r<0.4){x=105;yStart=Math.floor(20+Math.random()*60);yEnd=yStart-20}
+    s.style.setProperty('--x', x+'vw');
+    s.style.setProperty('--yStart', yStart+'vh');
+    s.style.setProperty('--yEnd', yEnd+'vh');
+    s.addEventListener('animationend',()=>s.remove());
+    fx.appendChild(s);
+  }
+  setInterval(()=>{
+    const n=2+Math.floor(Math.random()*2);
+    for(let i=0;i<n;i++) setTimeout(spawnSpark,i*200);
+  },2000);
+</script>
+
+</body>
+</html>
